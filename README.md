@@ -313,3 +313,31 @@ Class01 : int chimp
 Class01 : int gorilla
 Class08 <--> C2: Cool label
 ```
+
+```mermaid
+flowchart TD
+A{藍芽連線}
+B{#91;*IDN?#93;<br>與 Inverter 連線}
+C{#91;暫時停止判斷#93;<br>P1_2 == 0<br>&<br>P3_5 == 0}
+D[至設定畫面頁<br>暫時停止按鈕顯示於ON位置]
+E{#91;退出暫時停止#93;<br>設定 P_3 = 1}
+F[Do anything]
+G[異常停止]
+
+%%N[fa:fa-car Car]
+%%J(Go shopping)
+%% 使用圓角矩形
+%%P[inverter連線]
+%%H[Crash]
+%% style P fill:#f9c2ff,stroke:#333,stroke-width:2px;
+
+    A --> |OK|B  
+    A --> |NG|G   
+    B --> |異常| C
+    C --> |Yes|D
+    C --> |No|G  
+    D --> E
+    E --> |Yes|B
+E --> |No|F
+F --> |至設定畫面頁|D
+```
