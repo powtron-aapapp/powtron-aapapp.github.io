@@ -350,7 +350,11 @@ F --> F
 
 ```mermaid
 flowchart LR
-    B(輸出) --> |暫時停止| C{P1_2 == 0}
+
+B(輸出) 
+C{P1_2 == 0}
+
+    B --> |暫時停止| C
     C -->|Yes| D["[外部供電]\nOUTOFF = 1\nP1_3 = 0"]
     C -->|No| E["[未供電]\nOUTOFF = 1"]
     D --> F(停止輸出)
