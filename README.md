@@ -351,7 +351,7 @@ F --> F
 ```mermaid
 flowchart LR
 
-B(輸出) 
+B((輸出)) 
 C{P1_2 == 0}
 D["#91;外部供電#93;<br>OUTOFF = 1<br>P1_3 = 0"]
 E["#91;未供電#93;<br>OUTOFF = 1"]
