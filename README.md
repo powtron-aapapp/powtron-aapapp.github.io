@@ -353,11 +353,14 @@ flowchart LR
 
 B(輸出) 
 C{P1_2 == 0}
+D["[外部供電]<br>OUTOFF = 1<br>P1_3 = 0"]
+E["[未供電]<br>OUTOFF = 1"]
+F(停止輸出)
 
     B --> |暫時停止| C
-    C -->|Yes| D["[外部供電]\nOUTOFF = 1\nP1_3 = 0"]
-    C -->|No| E["[未供電]\nOUTOFF = 1"]
-    D --> F(停止輸出)
+    C -->|Yes| D
+    C -->|No| E
+    D --> F
     E --> F
 
     G(停止輸出) --> |恢復輸出| H{P1_2 == 0}
