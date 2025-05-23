@@ -1,37 +1,20 @@
-import base64
-import requests
-from PIL import Image
-
-def png(graph, bg = None):
-  graphbytes = graph.encode("ascii")
-  base64_bytes = base64.b64encode(graphbytes)
-  base64_string = base64_bytes.decode("ascii")
-  
-  url = "https://mermaid.ink/img/" + base64_string
-  if bg is not None:
-    url += "?bgColor=" + bg
-  im = Image.open(requests.get(url, stream=True).raw)
-  im.save('flow.png')
-
-def svg(graph, bg = None):
-  graphbytes = graph.encode("ascii")
-  base64_bytes = base64.b64encode(graphbytes)
-  base64_string = base64_bytes.decode("ascii")
-  
-  url = "https://mermaid.ink/svg/" + base64_string
-  if bg is not None:
-    url += "?bgColor=" + bg
-  with open('flow.svg', 'w') as f:
-    f.write(requests.get(url).text)
-
-g = """
-graph LR;
-    A--> B & C & D;
-    B--> A & E;
-    C--> A & E;
-    D--> A & E;
-    E--> B & C & D;
-"""
-
-png(g, '123456')
-svg(g, 'FF0000')
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Mermaid Demo</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <h2>Mermaid 流程圖示範</h2>
+    <div class="mermaid">
+        graph TD;
+        A-->B;
+        B-->C;
+        C-->D;
+    </div>
+</body>
+</html>
