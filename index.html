@@ -26,5 +26,26 @@
         C-->|連結3|D;
     </div>
 
+    <h2>使用不同形狀</h2>
+    <div class="mermaid">
+        graph LR;
+        style A fill:#f9f,stroke:#333,stroke-width:2px;
+        style B fill:#ff0,stroke:#333,stroke-width:2px;
+
+        A("開始") --> B{"條件判斷"};
+        B -->|是| C["執行動作"];
+        B -->|否| D[結束];
+    </div>
+
+    <h2>也可由上至下繪製</h2>
+    <div class="mermaid">
+        flowchart TD
+        A[Christmas] -->|Get money| B(Go shopping)
+        B --> C{Let me think}
+        C -->|One| D[Laptop]
+        C -->|Two| E[iPhone]
+        C -->|Three| F[fa:fa-car Car]
+    </div>
+
 </body>
 </html>
