@@ -59,6 +59,14 @@
             margin-bottom: 1rem;
             display: none; /* Hidden by default */
         }
+        .preview-image {
+            max-width: 150px; /* 預覽圖片大小 */
+            max-height: 150px;
+            border-radius: 0.5rem;
+            margin: 1rem auto;
+            display: block;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -68,6 +76,9 @@
 
         <!-- 新增圖片上傳輸入元素 -->
         <input type="file" id="imageUpload" accept="image/*" class="my-4 p-2 border rounded-md w-full">
+
+        <!-- 圖片預覽區域 -->
+        <img id="imagePreview" class="preview-image" src="" alt="圖片預覽" style="display: none;">
 
         <button id="generateSketchBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
             生成彩色鉛筆素描
@@ -92,7 +103,8 @@
         const auth = getAuth(app);
 
         // UI 元素
-        const imageUpload = document.getElementById('imageUpload'); // 新增圖片上傳元素
+        const imageUpload = document.getElementById('imageUpload'); // 圖片上傳輸入元素
+        const imagePreview = document.getElementById('imagePreview'); // 圖片預覽元素
         const generateSketchBtn = document.getElementById('generateSketchBtn');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const sketchOutput = document.getElementById('sketchOutput');
@@ -110,17 +122,34 @@
             messageBox.style.display = 'none';
         }
 
+        // 監聽圖片上傳輸入欄位的變化，以顯示預覽
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block'; // 顯示預覽圖片
+                };
+                reader.readAsDataURL(file); // 讀取為 Data URL
+            } else {
+                imagePreview.src = "";
+                imagePreview.style.display = 'none'; // 隱藏預覽圖片
+            }
+        });
+
+
         generateSketchBtn.addEventListener('click', async () => {
             hideMessage();
-            loadingSpinner.style.display = 'block'; // 顯示載入指示器
             sketchOutput.innerHTML = ''; // 清空之前的圖片
 
             const imageFile = imageUpload.files[0]; // 獲取使用者選擇的檔案
             if (!imageFile) {
                 showMessage("請先選擇一張圖片。", "error");
-                loadingSpinner.style.display = 'none';
-                return;
+                return; // 如果沒有選擇檔案，則直接返回
             }
+
+            loadingSpinner.style.display = 'block'; // 顯示載入指示器
 
             try {
                 // 匿名登入或使用提供的 token 登入
@@ -132,72 +161,74 @@
                 console.log("Firebase Auth success.");
 
                 const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const base64ImageData = reader.result.split(',')[1]; // 提取 base64 字串
+                reader.onloadend = async () => { // 這是一個非同步的回呼函數
+                    try {
+                        const base64ImageData = reader.result.split(',')[1]; // 提取 base64 字串
 
-                    if (!base64ImageData) {
-                        loadingSpinner.style.display = 'none';
-                        showMessage("無法讀取圖片數據。", "error");
-                        return;
+                        if (!base64ImageData) {
+                            showMessage("無法讀取圖片數據。", "error");
+                            return;
+                        }
+
+                        const prompt = "Please generate a color pencil sketch of the person in the image. Focus on capturing the texture and style of a colored pencil drawing.";
+                        const payload = {
+                            instances: {
+                                prompt: prompt,
+                                image: {
+                                    bytesBase64Encoded: base64ImageData
+                                }
+                            },
+                            parameters: { "sampleCount": 1 }
+                        };
+
+                        const apiKey = ""; // Canvas 會自動提供 API key
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            console.error("API Error:", errorData);
+                            showMessage(`生成圖片失敗: ${errorData.error?.message || '未知錯誤'}`, "error");
+                            return;
+                        }
+
+                        const result = await response.json();
+                        if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                            const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                            const imgElement = document.createElement('img');
+                            imgElement.src = imageUrl;
+                            imgElement.alt = "彩色鉛筆素描";
+                            sketchOutput.appendChild(imgElement);
+                            showMessage("彩色鉛筆素描圖片已成功生成！");
+                        } else {
+                            showMessage("未從 API 獲取到有效的圖片數據。", "error");
+                        }
+                    } catch (apiError) {
+                        console.error("Error during image generation API call:", apiError);
+                        showMessage(`圖片生成過程中發生錯誤: ${apiError.message}`, "error");
+                    } finally {
+                        loadingSpinner.style.display = 'none'; // 在 API 呼叫（成功或失敗）後隱藏載入指示器
                     }
-
-                    const prompt = "Please generate a color pencil sketch of the person in the image. Focus on capturing the texture and style of a colored pencil drawing.";
-                    const payload = {
-                        instances: {
-                            prompt: prompt,
-                            image: {
-                                bytesBase64Encoded: base64ImageData
-                            }
-                        },
-                        parameters: { "sampleCount": 1 }
-                    };
-
-                    const apiKey = ""; // Canvas 會自動提供 API key
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        console.error("API Error:", errorData);
-                        showMessage(`生成圖片失敗: ${errorData.error?.message || '未知錯誤'}`, "error");
-                        return;
-                    }
-
-                    const result = await response.json();
-                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
-                        const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                        const imgElement = document.createElement('img');
-                        imgElement.src = imageUrl;
-                        imgElement.alt = "彩色鉛筆素描";
-                        sketchOutput.appendChild(imgElement);
-                        showMessage("彩色鉛筆素描圖片已成功生成！");
-                    } else {
-                        showMessage("未從 API 獲取到有效的圖片數據。", "error");
-                    }
-                    loadingSpinner.style.display = 'none'; // 隱藏載入指示器
                 };
+
                 reader.onerror = (error) => {
                     console.error("FileReader error:", error);
                     showMessage("讀取檔案時發生錯誤。", "error");
-                    loadingSpinner.style.display = 'none';
+                    loadingSpinner.style.display = 'none'; // 在 FileReader 錯誤時隱藏載入指示器
                 };
-                reader.readAsDataURL(imageFile); // 開始讀取檔案，觸發 onloadend
-            } catch (error) {
-                console.error("Error during authentication or setup:", error);
-                showMessage(`應用程式錯誤: ${error.message}`, "error");
-                loadingSpinner.style.display = 'none';
+
+                reader.readAsDataURL(imageFile); // 開始讀取檔案，這將觸發 onloadend 或 onerror
+            } catch (authError) {
+                console.error("Error during authentication:", authError);
+                showMessage(`認證失敗: ${authError.message}`, "error");
+                loadingSpinner.style.display = 'none'; // 在認證錯誤時隱藏載入指示器
             }
         });
-
-        // 移除 window.onload 自動觸發，因為現在需要使用者選擇檔案
-        // window.onload = () => {
-        //     generateSketchBtn.click();
-        // };
     </script>
 </body>
 </html>
