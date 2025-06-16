@@ -156,10 +156,10 @@
                     const apiKey = "AIzaSyDegIQZAzMZeiVajsStxrgWvGDMkfZ4GUg"; // <<<<<<<<<<< 請在這裡貼上您的 API 金鑰
 
                     // 確保 apiKey 已被替換，否則 API 呼叫會失敗
-                    if (apiKey === "AIzaSyDegIQZAzMZeiVajsStxrgWvGDMkfZ4GUg" || apiKey === "") { 
-                         showMessage("請在程式碼中替換為您的 Google Generative Language API 金鑰。", "error"); 
-                         return;
-                    }
+                    //if (apiKey === "AIzaSyDegIQZAzMZeiVajsStxrgWvGDMkfZ4GUg" || apiKey === "") { 
+                    //     showMessage("請在程式碼中替換為您的 Google Generative Language API 金鑰。", "error"); 
+                    //     return;
+                    //}
 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
