@@ -95,12 +95,37 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // 從環境變數獲取 Firebase 配置
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // 在 GitHub Pages 上，__firebase_config 和 __initial_auth_token 不會自動提供。
+        // 請替換為您自己的 Firebase 專案配置物件！
+        const firebaseConfig = {
+            // 在這裡貼上您從 Firebase Console 獲取的 firebaseConfig 物件
+            // 範例 (請替換為您自己的值):
+            // apiKey: "AIzaSyB-YOUR-FIREBASE-API-KEY",
+            // authDomain: "your-project-id.firebaseapp.com",
+            // projectId: "your-project-id",
+            // storageBucket: "your-project-id.appspot.com",
+            // messagingSenderId: "1234567890",
+            // appId: "1:1234567890:web:abcdef1234567890abcdef"
+        };
+
+        // 如果您的 Firebase 專案需要自訂認證 token，請在這裡提供。
+        // 對於匿名登入，這通常不需要。
+        const initialAuthToken = null; // 或者如果您有自訂 token，請替換為 'YOUR_CUSTOM_AUTH_TOKEN';
 
         // 初始化 Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        // 確保 firebaseConfig 不是空物件，否則 initializeApp 會失敗
+        let app;
+        let auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            console.log("Firebase initialized.");
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+            // 這裡可以顯示錯誤訊息給使用者，告知 Firebase 初始化失敗
+            // showMessage("Firebase 初始化失敗，請檢查設定。", "error");
+        }
+
 
         // UI 元素
         const imageUpload = document.getElementById('imageUpload'); // 圖片上傳輸入元素
@@ -149,6 +174,12 @@
                 return; // 如果沒有選擇檔案，則直接返回
             }
 
+            // 在這裡檢查 Firebase 是否已成功初始化
+            if (!auth) {
+                showMessage("應用程式初始化失敗，請檢查控制台的錯誤訊息。", "error");
+                return;
+            }
+
             loadingSpinner.style.display = 'block'; // 顯示載入指示器
 
             try {
@@ -181,7 +212,15 @@
                             parameters: { "sampleCount": 1 }
                         };
 
-                        const apiKey = ""; // Canvas 會自動提供 API key
+                        // 請替換為您從 Google Cloud Console 獲取的 Generative Language API 金鑰
+                        const apiKey = "YOUR_GENERATIVE_LANGUAGE_API_KEY"; // <<<<<<<<<<< 在這裡貼上您的 API 金鑰
+
+                        // 確保 apiKey 已被替換，否則 API 呼叫會失敗
+                        if (apiKey === "YOUR_GENERATIVE_LANGUAGE_API_KEY" || apiKey === "") {
+                             showMessage("請在程式碼中替換為您的 Google Generative Language API 金鑰。", "error");
+                             return;
+                        }
+
                         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
                         const response = await fetch(apiUrl, {
@@ -225,7 +264,7 @@
                 reader.readAsDataURL(imageFile); // 開始讀取檔案，這將觸發 onloadend 或 onerror
             } catch (authError) {
                 console.error("Error during authentication:", authError);
-                showMessage(`認證失敗: ${authError.message}`, "error");
+                showMessage(`認證失敗: ${authError.message}，請檢查您的 Firebase 設定。`, "error");
                 loadingSpinner.style.display = 'none'; // 在認證錯誤時隱藏載入指示器
             }
         });
