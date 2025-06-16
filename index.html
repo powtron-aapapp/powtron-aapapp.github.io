@@ -73,64 +73,16 @@
     <div class="container">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">彩色鉛筆素描圖片生成器</h1>
         <div id="message-box" class="message-box"></div>
-
-        <!-- 新增圖片上傳輸入元素 -->
         <input type="file" id="imageUpload" accept="image/*" class="my-4 p-2 border rounded-md w-full">
-
-        <!-- 圖片預覽區域 -->
         <img id="imagePreview" class="preview-image" src="" alt="圖片預覽" style="display: none;">
-
         <button id="generateSketchBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
             生成彩色鉛筆素描
         </button>
         <div id="loadingSpinner" class="loading-spinner"></div>
         <div id="sketchOutput" class="image-container">
-            <!-- 素描圖片將顯示在這裡 -->
-        </div>
+            </div>
     </div>
-
     <script type="module">
-        // 載入必要的 Firebase 模組
-
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-	import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // 從環境變數獲取 Firebase 配置
-        // 在 GitHub Pages 上，__firebase_config 和 __initial_auth_token 不會自動提供。
-        // 請替換為您自己的 Firebase 專案配置物件！
-        const firebaseConfig = {
-            // 在這裡貼上您從 Firebase Console 獲取的 firebaseConfig 物件
-            // 範例 (請替換為您自己的值):
-
-		apiKey: "AIzaSyBLld_Env9J8_ctCFHDOVLqY9AqZooo_6c",
-		authDomain: "image-generator-cde65.firebaseapp.com",
-		projectId: "image-generator-cde65",
-		storageBucket: "image-generator-cde65.firebasestorage.app",
-		messagingSenderId: "421798328297",
-		appId: "1:421798328297:web:e7b315c9e8f1404b1cbd78",
-		measurementId: "G-1PFW9EM8CP"
-
-        };
-
-        // 如果您的 Firebase 專案需要自訂認證 token，請在這裡提供。
-        // 對於匿名登入，這通常不需要。
-        const initialAuthToken = null; // 或者如果您有自訂 token，請替換為 'YOUR_CUSTOM_AUTH_TOKEN';
-
-        // 初始化 Firebase
-        // 確保 firebaseConfig 不是空物件，否則 initializeApp 會失敗
-        let app;
-        let auth;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            console.log("Firebase initialized.");
-        } catch (e) {
-            console.error("Firebase initialization failed:", e);
-            // 這裡可以顯示錯誤訊息給使用者，告知 Firebase 初始化失敗
-            // showMessage("Firebase 初始化失敗，請檢查設定。", "error");
-        }
-
-
         // UI 元素
         const imageUpload = document.getElementById('imageUpload'); // 圖片上傳輸入元素
         const imagePreview = document.getElementById('imagePreview'); // 圖片預覽元素
@@ -167,110 +119,90 @@
             }
         });
 
-
         generateSketchBtn.addEventListener('click', async () => {
             hideMessage();
             sketchOutput.innerHTML = ''; // 清空之前的圖片
-
             const imageFile = imageUpload.files[0]; // 獲取使用者選擇的檔案
+
             if (!imageFile) {
                 showMessage("請先選擇一張圖片。", "error");
                 return; // 如果沒有選擇檔案，則直接返回
             }
-
-            // 在這裡檢查 Firebase 是否已成功初始化
-            if (!auth) {
-                showMessage("應用程式初始化失敗，請檢查控制台的錯誤訊息。", "error");
-                return;
-            }
-
+            
             loadingSpinner.style.display = 'block'; // 顯示載入指示器
 
-            try {
-                // 匿名登入或使用提供的 token 登入
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                console.log("Firebase Auth success.");
+            const reader = new FileReader();
+            reader.onloadend = async () => { // 這是一個非同步的回呼函數
+                try {
+                    const base64ImageData = reader.result.split(',')[1]; // 提取 base64 字串
 
-                const reader = new FileReader();
-                reader.onloadend = async () => { // 這是一個非同步的回呼函數
-                    try {
-                        const base64ImageData = reader.result.split(',')[1]; // 提取 base64 字串
-
-                        if (!base64ImageData) {
-                            showMessage("無法讀取圖片數據。", "error");
-                            return;
-                        }
-
-                        const prompt = "Please generate a color pencil sketch of the person in the image. Focus on capturing the texture and style of a colored pencil drawing.";
-                        const payload = {
-                            instances: {
-                                prompt: prompt,
-                                image: {
-                                    bytesBase64Encoded: base64ImageData
-                                }
-                            },
-                            parameters: { "sampleCount": 1 }
-                        };
-
-                        // 請替換為您從 Google Cloud Console 獲取的 Generative Language API 金鑰
-                        const apiKey = "AIzaSyBLld_Env9J8_ctCFHDOVLqY9AqZooo_6c"; // <<<<<<<<<<< 在這裡貼上您的 API 金鑰
-
-                        // 確保 apiKey 已被替換，否則 API 呼叫會失敗
-                        if (apiKey === "AIzaSyBLld_Env9J8_ctCFHDOVLqY9AqZooo_6c" || apiKey === "") {
-                             showMessage("請在程式碼中替換為您的 Google Generative Language API 金鑰。", "error");
-                             return;
-                        }
-
-                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            console.error("API Error:", errorData);
-                            showMessage(`生成圖片失敗: ${errorData.error?.message || '未知錯誤'}`, "error");
-                            return;
-                        }
-
-                        const result = await response.json();
-                        if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
-                            const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                            const imgElement = document.createElement('img');
-                            imgElement.src = imageUrl;
-                            imgElement.alt = "彩色鉛筆素描";
-                            sketchOutput.appendChild(imgElement);
-                            showMessage("彩色鉛筆素描圖片已成功生成！");
-                        } else {
-                            showMessage("未從 API 獲取到有效的圖片數據。", "error");
-                        }
-                    } catch (apiError) {
-                        console.error("Error during image generation API call:", apiError);
-                        showMessage(`圖片生成過程中發生錯誤: ${apiError.message}`, "error");
-                    } finally {
-                        loadingSpinner.style.display = 'none'; // 在 API 呼叫（成功或失敗）後隱藏載入指示器
+                    if (!base64ImageData) {
+                        showMessage("無法讀取圖片數據。", "error");
+                        return;
                     }
-                };
 
-                reader.onerror = (error) => {
-                    console.error("FileReader error:", error);
-                    showMessage("讀取檔案時發生錯誤。", "error");
-                    loadingSpinner.style.display = 'none'; // 在 FileReader 錯誤時隱藏載入指示器
-                };
+                    const prompt = "Please generate a color pencil sketch of the person in the image. Focus on capturing the texture and style of a colored pencil drawing.";
+                    const payload = {
+                        instances: [{ // instances 應該是一個陣列，每個元素是一個實例對象
+                            prompt: prompt,
+                            image: {
+                                bytesBase64Encoded: base64ImageData
+                            }
+                        }],
+                        parameters: { "sampleCount": 1 }
+                    };
 
-                reader.readAsDataURL(imageFile); // 開始讀取檔案，這將觸發 onloadend 或 onerror
-            } catch (authError) {
-                console.error("Error during authentication:", authError);
-                showMessage(`認證失敗: ${authError.message}，請檢查您的 Firebase 設定。`, "error");
-                loadingSpinner.style.display = 'none'; // 在認證錯誤時隱藏載入指示器
-            }
+                    // 請替換為您從 Google Cloud Console 獲取的 Generative Language API 金鑰
+                    const apiKey = "YOUR_GOOGLE_GENERATIVE_LANGUAGE_API_KEY"; // <<<<<<<<<<< 請在這裡貼上您的 API 金鑰
+
+                    // 確保 apiKey 已被替換，否則 API 呼叫會失敗
+                    if (apiKey === "YOUR_GOOGLE_GENERATIVE_LANGUAGE_API_KEY" || apiKey === "") { 
+                         showMessage("請在程式碼中替換為您的 Google Generative Language API 金鑰。", "error"); 
+                         return;
+                    }
+
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error("API Error:", errorData);
+                        showMessage(`生成圖片失敗: ${errorData.error?.message || '未知錯誤'}`, "error");
+                        return;
+                    }
+
+                    const result = await response.json();
+                    // 根據 Generative Language API 的回應結構調整：predictions 應該是一個陣列
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].assetData?.bytesBase64Encoded) {
+                        const imageUrl = `data:image/png;base64,${result.predictions[0].assetData.bytesBase64Encoded}`;
+                        const imgElement = document.createElement('img');
+                        imgElement.src = imageUrl;
+                        imgElement.alt = "彩色鉛筆素描";
+                        sketchOutput.appendChild(imgElement);
+                        showMessage("彩色鉛筆素描圖片已成功生成！");
+                    } else {
+                        showMessage("未從 API 獲取到有效的圖片數據。", "error");
+                    }
+                } catch (apiError) {
+                    console.error("Error during image generation API call:", apiError);
+                    showMessage(`圖片生成過程中發生錯誤: ${apiError.message}`, "error");
+                } finally {
+                    loadingSpinner.style.display = 'none'; // 在 API 呼叫（成功或失敗）後隱藏載入指示器
+                }
+            };
+
+            reader.onerror = (error) => {
+                console.error("FileReader error:", error);
+                showMessage("讀取檔案時發生錯誤。", "error");
+                loadingSpinner.style.display = 'none'; // 在 FileReader 錯誤時隱藏載入指示器
+            };
+
+            reader.readAsDataURL(imageFile); // 開始讀取檔案，這將觸發 onloadend 或 onerror
         });
     </script>
 </body>
