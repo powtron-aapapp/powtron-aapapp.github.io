@@ -2,13 +2,13 @@
 
 只需使用 **三重反引號**（```）括住 Mermaid 語句，即可讓文件呈現圖表、具備視覺化效果。
 
-````markdown
+```markdown
 ```mermaid
 
     %%Mermaid code
 
 ```
-````
+```
 
 ### 繪製流程圖
 
@@ -59,7 +59,7 @@ graph LR;
 style A fill:#f9f,stroke:#333,stroke-width:2px;
 style B fill:#ff0,stroke:#333,stroke-width:2px;
 
-    A("開始") --> B{"條件判斷"};
+    A("開始") --> B{"條件<br>判斷"};
     B -->|是| C["執行動作"];
     B -->|否| D[結束];
 ```
@@ -69,7 +69,7 @@ graph LR;
 style A fill:#f9f,stroke:#333,stroke-width:2px;
 style B fill:#ff0,stroke:#333,stroke-width:2px;
 
-    A("開始") --> B{"條件判斷"};
+    A("開始") --> B{"條件<br>判斷"};
     B -->|是| C["執行動作"];
     B -->|否| D[結束];
 ```
@@ -315,7 +315,6 @@ Class08 <--> C2: Cool label
 ```
 
 ```mermaid
-
 flowchart LR
 
 A{藍芽連線}
@@ -345,7 +344,6 @@ E --> |Yes|B
 E --> |No|F
 F --> |至設定畫面頁|D
 F --> F
-
 ```
 
 ```mermaid
